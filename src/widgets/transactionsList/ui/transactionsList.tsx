@@ -10,7 +10,7 @@ type Props = {
   className?: string
 }
 
-type SortColumn = 'date' | 'name' | 'description' | 'amount'
+type SortColumn = 'date' | 'merchant' | 'description' | 'amount'
 type SortDirection = 'asc' | 'desc'
 
 export const TransactionsList = ({ className }: Props) => {
@@ -45,11 +45,11 @@ export const TransactionsList = ({ className }: Props) => {
           }
           break
         }
-        case 'name':
-          comparison = a.name.localeCompare(b.name)
+        case 'merchant':
+          comparison = a.merchantNorm.localeCompare(b.merchantNorm)
           break
         case 'description':
-          comparison = a.description.localeCompare(b.description)
+          comparison = a.descriptionRaw.localeCompare(b.descriptionRaw)
           break
         case 'amount':
           comparison = a.amount - b.amount
@@ -89,10 +89,10 @@ export const TransactionsList = ({ className }: Props) => {
                   </Table.ColumnHeader>
                   <Table.ColumnHeader>
                     <button
-                      onClick={() => handleSort('name')}
+                      onClick={() => handleSort('merchant')}
                       className="flex items-center gap-2 hover:text-blue-600 cursor-pointer w-full text-left bg-transparent border-none p-0"
                     >
-                      {t('transactionsList.name')} {getSortIndicator('name')}
+                      {t('transactionsList.name')} {getSortIndicator('merchant')}
                     </button>
                   </Table.ColumnHeader>
                   <Table.ColumnHeader>
@@ -119,8 +119,8 @@ export const TransactionsList = ({ className }: Props) => {
                   <Table.Cell className="whitespace-nowrap">
                     {formatDate(tx.date, i18n.language, (key) => t(`transactionsList.${key}`))}
                   </Table.Cell>
-                  <Table.Cell className="font-medium">{tx.name}</Table.Cell>
-                  <Table.Cell>{tx.description}</Table.Cell>
+                  <Table.Cell className="font-medium">{tx.merchantRaw || tx.merchantNorm}</Table.Cell>
+                  <Table.Cell>{tx.descriptionRaw}</Table.Cell>
                   <Table.Cell className={tx.amount < 0 ? 'text-red-600' : 'text-green-600'}>
                     {formatCurrency(tx.amount)}
                   </Table.Cell>
@@ -134,4 +134,3 @@ export const TransactionsList = ({ className }: Props) => {
     </Box>
   )
 }
-

@@ -3,6 +3,7 @@ import { useAtom } from 'jotai'
 import { useTranslation } from 'react-i18next'
 import { transactionsAtom, parseCSV } from '@/entities/transaction'
 import { Button, Box, VStack } from '@chakra-ui/react'
+import type { Transaction } from '@/shared/types'
 
 type Props = {
   className?: string
@@ -27,12 +28,12 @@ export const CsvUploader = ({ className }: Props) => {
       const text = await file.text()
       const parsedTransactions = parseCSV(text)
       
-      const existingIds = new Set(transactions.map(tx => tx.documentId))
+      const existingIds = new Set(transactions.map(tx => tx.sourceId))
       let newCount = 0
       let updatedCount = 0
       
       for (const tx of parsedTransactions) {
-        if (existingIds.has(tx.documentId)) {
+        if (existingIds.has(tx.sourceId)) {
           updatedCount++
         } else {
           newCount++
@@ -42,10 +43,10 @@ export const CsvUploader = ({ className }: Props) => {
       setTransactions((prev) => {
         const record: Record<string, Transaction> = {}
         for (const tx of prev) {
-          record[tx.documentId] = tx
+          record[tx.sourceId] = tx
         }
         for (const tx of parsedTransactions) {
-          record[tx.documentId] = tx
+          record[tx.sourceId] = tx
         }
         return Object.values(record)
       })
@@ -126,4 +127,3 @@ export const CsvUploader = ({ className }: Props) => {
     </Box>
   )
 }
-

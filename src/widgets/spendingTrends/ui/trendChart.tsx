@@ -30,8 +30,9 @@ export const TrendChart = ({ className, months = 6 }: Props) => {
     const allNameTotals = new Map<string, number>()
     for (const tx of transactions) {
       if (tx.amount < 0) {
-        const current = allNameTotals.get(tx.name) || 0
-        allNameTotals.set(tx.name, current + Math.abs(tx.amount))
+        const merchant = tx.merchantNorm || tx.merchantRaw || 'Unknown'
+        const current = allNameTotals.get(merchant) || 0
+        allNameTotals.set(merchant, current + Math.abs(tx.amount))
       }
     }
 
@@ -52,8 +53,9 @@ export const TrendChart = ({ className, months = 6 }: Props) => {
       const nameTotals = new Map<string, number>()
       
       for (const tx of monthTransactions) {
-        const current = nameTotals.get(tx.name) || 0
-        nameTotals.set(tx.name, current + Math.abs(tx.amount))
+        const merchant = tx.merchantNorm || tx.merchantRaw || 'Unknown'
+        const current = nameTotals.get(merchant) || 0
+        nameTotals.set(merchant, current + Math.abs(tx.amount))
       }
 
       const result: Record<string, string | number> = {
@@ -147,4 +149,3 @@ export const TrendChart = ({ className, months = 6 }: Props) => {
     </Box>
   )
 }
-

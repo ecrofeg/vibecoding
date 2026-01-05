@@ -22,9 +22,9 @@ export const ExpensePieChart = ({ className }: Props) => {
     const nameTotals = new Map<string, number>()
 
     for (const expense of expenses) {
-      const name = expense.name || 'Unknown'
-      const current = nameTotals.get(name) || 0
-      nameTotals.set(name, current + Math.abs(expense.amount))
+      const merchant = expense.merchantNorm || expense.merchantRaw || 'Unknown'
+      const current = nameTotals.get(merchant) || 0
+      nameTotals.set(merchant, current + Math.abs(expense.amount))
     }
 
     const sortedData = Array.from(nameTotals.entries())
@@ -97,4 +97,3 @@ export const ExpensePieChart = ({ className }: Props) => {
     </div>
   )
 }
-

@@ -7,4 +7,6 @@ export {
   incomeAtom,
 } from './model/filteredTransactionsAtom'
 export { parseCSV } from './lib/csvParser'
-
+export { parsePdf } from './lib/pdfParser'
+export { normalizeMerchant } from './lib/merchantNormalizer'
+export { isTransferTransaction, isRefundTransaction } from './lib/transferDetector'

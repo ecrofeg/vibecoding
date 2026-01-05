@@ -25,9 +25,10 @@ export const filteredTransactionsAtom = atom((get): Transaction[] => {
       }
       
       if (searchQuery) {
-        const matchesDescription = tx.description.toLowerCase().includes(searchQuery)
-        const matchesName = tx.name.toLowerCase().includes(searchQuery)
-        return matchesDescription || matchesName
+        const matchesDescription = tx.descriptionRaw.toLowerCase().includes(searchQuery)
+        const matchesMerchant = tx.merchantRaw.toLowerCase().includes(searchQuery)
+        const matchesNormalized = tx.merchantNorm.toLowerCase().includes(searchQuery)
+        return matchesDescription || matchesMerchant || matchesNormalized
       }
       
       return true
@@ -46,4 +47,3 @@ export const incomeAtom = atom((get): Transaction[] => {
   const transactions = get(filteredTransactionsAtom)
   return transactions.filter((tx: Transaction) => tx.amount > 0)
 })
-

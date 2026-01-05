@@ -1,7 +1,8 @@
 import Papa from 'papaparse'
 import { parse, isValid } from 'date-fns'
 import { v4 as uuidv4 } from 'uuid'
-import type { Transaction } from '@/shared/types'
+import type { Transaction, TxType } from '@/shared/types'
+import { normalizeMerchant } from './merchantNormalizer'
 
 const hashString = (str: string): string => {
   let hash = 0
@@ -83,6 +84,13 @@ const findColumn = (headers: string[], possibleNames: string[]): number => {
   }
   
   return -1
+}
+
+const resolveTxType = (amount: number): TxType => {
+  if (amount === 0) {
+    return 'expense'
+  }
+  return amount > 0 ? 'income' : 'expense'
 }
 
 export const parseCSV = (csvContent: string): Transaction[] => {
@@ -251,7 +259,8 @@ export const parseCSV = (csvContent: string): Transaction[] => {
         continue
       }
 
-      const name = description.trim()
+      const merchantRaw = description.trim()
+      const merchantNorm = normalizeMerchant(merchantRaw)
       
       let documentId: string
       if (documentIdHeader && documentIdHeader in row) {
@@ -265,13 +274,31 @@ export const parseCSV = (csvContent: string): Transaction[] => {
         documentId = generateSyntheticId(date, amount, description)
       }
 
+      const txType = resolveTxType(amount)
+
       transactions.push({
         id: uuidv4(),
-        documentId,
+        sourceId: documentId,
+        source: 'csv',
+        bankId: 'unknown',
+        accountId: null,
+        cardLast4: null,
         date,
-        name,
-        description,
+        postedDate: null,
         amount,
+        currency: 'RUB',
+        descriptionRaw: description,
+        merchantRaw,
+        merchantNorm,
+        categoryId: null,
+        needType: 'unknown',
+        txType,
+        isTransfer: false,
+        isRecurring: false,
+        notes: null,
+        categorySource: null,
+        categoryConfidence: null,
+        normalizationConfidence: null,
       })
       
       console.log(`Row ${i + 1}: Added transaction - ${description}, amount: ${amount}`)
@@ -284,4 +311,3 @@ export const parseCSV = (csvContent: string): Transaction[] => {
   console.log(`Total transactions parsed: ${transactions.length}`)
   return transactions
 }
-
