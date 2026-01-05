@@ -45,6 +45,7 @@ export const TrendChart = ({ className, months = 6 }: Props) => {
       if (breakdownMode === 'name') {
         labels.set(key, key)
       } else {
+        console.log(key)
         const categoryKey = `categories.${key}` as const
         labels.set(key, t(categoryKey) || key)
       }
@@ -146,9 +147,15 @@ export const TrendChart = ({ className, months = 6 }: Props) => {
               from: 'color',
               modifiers: [['darker', 1.6]],
             }}
+            tooltipLabel={(d) => keyLabels.get(String(d.id)) || String(d.id)}
             legends={[
               {
                 dataFrom: 'keys',
+                data: topKeys.map((key, index) => ({
+                  id: key,
+                  label: keyLabels.get(key) || key,
+                  color: colors[index % colors.length],
+                })),
                 anchor: 'bottom-right',
                 direction: 'column',
                 justify: false,
@@ -160,7 +167,6 @@ export const TrendChart = ({ className, months = 6 }: Props) => {
                 itemDirection: 'left-to-right',
                 itemOpacity: 0.85,
                 symbolSize: 20,
-                format: (key) => keyLabels.get(String(key)) || String(key),
                 effects: [
                   {
                     on: 'hover',
