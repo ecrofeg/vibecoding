@@ -1,11 +1,11 @@
 import { useAtom } from 'jotai'
 import { useTranslation } from 'react-i18next'
 import { ResponsiveBar } from '@nivo/bar'
-import { transactionsAtom } from '@/entities/transaction'
+import { expensesAtom } from '@/entities/transaction'
 import { formatDateShort } from '@/shared/lib/formatters'
 import { startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from 'date-fns'
-import { Box, VStack, Heading } from '@chakra-ui/react'
-import { useMemo } from 'react'
+import { Box, VStack, Heading, HStack, Button } from '@chakra-ui/react'
+import { useMemo, useState } from 'react'
 
 const colors = [
   '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
@@ -20,55 +20,66 @@ type Props = {
 
 export const TrendChart = ({ className, months = 6 }: Props) => {
   const { t, i18n } = useTranslation()
-  const [transactions] = useAtom(transactionsAtom)
+  const [expenses] = useAtom(expensesAtom)
+  const [breakdownMode, setBreakdownMode] = useState<'name' | 'category'>('name')
 
-  const { chartData, topNames } = useMemo(() => {
+  const { chartData, topKeys, keyLabels } = useMemo(() => {
     const endDate = endOfMonth(new Date())
     const startDate = startOfMonth(subMonths(endDate, months - 1))
     const monthRanges = eachMonthOfInterval({ start: startDate, end: endDate })
 
-    const allNameTotals = new Map<string, number>()
-    for (const tx of transactions) {
-      if (tx.amount < 0) {
-        const current = allNameTotals.get(tx.name) || 0
-        allNameTotals.set(tx.name, current + Math.abs(tx.amount))
+    const allKeyTotals = new Map<string, number>()
+    for (const tx of expenses) {
+      const key = breakdownMode === 'name' ? (tx.name || 'Unknown') : (tx.category || 'other')
+      const current = allKeyTotals.get(key) || 0
+      allKeyTotals.set(key, current + Math.abs(tx.amount))
+    }
+
+    const sortedKeys = Array.from(allKeyTotals.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([key]) => key)
+
+    const labels = new Map<string, string>()
+    for (const key of sortedKeys) {
+      if (breakdownMode === 'name') {
+        labels.set(key, key)
+      } else {
+        const categoryKey = `categories.${key}` as const
+        labels.set(key, t(categoryKey) || key)
       }
     }
 
-    const sortedNames = Array.from(allNameTotals.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .map(([name]) => name)
-
     const data = monthRanges.map(monthStart => {
       const monthEnd = endOfMonth(monthStart)
-      const monthTransactions = transactions.filter(tx => {
+      const monthTransactions = expenses.filter(tx => {
         if (!tx.date || isNaN(tx.date.getTime())) {
           return false
         }
-        return tx.date >= monthStart && tx.date <= monthEnd && tx.amount < 0
+        return tx.date >= monthStart && tx.date <= monthEnd
       })
 
-      const nameTotals = new Map<string, number>()
+      const keyTotals = new Map<string, number>()
       
       for (const tx of monthTransactions) {
-        const current = nameTotals.get(tx.name) || 0
-        nameTotals.set(tx.name, current + Math.abs(tx.amount))
+        const key = breakdownMode === 'name' ? (tx.name || 'Unknown') : (tx.category || 'other')
+        const current = keyTotals.get(key) || 0
+        keyTotals.set(key, current + Math.abs(tx.amount))
       }
 
       const result: Record<string, string | number> = {
         month: formatDateShort(monthStart, i18n.language),
       }
 
-      for (const name of sortedNames) {
-        result[name] = Math.round((nameTotals.get(name) || 0) * 100) / 100
+      for (const key of sortedKeys) {
+        result[key] = Math.round((keyTotals.get(key) || 0) * 100) / 100
       }
 
       return result
     })
 
-    return { chartData: data, topNames: sortedNames }
-  }, [transactions, months])
+    return { chartData: data, topKeys: sortedKeys, keyLabels: labels }
+  }, [expenses, months, i18n.language, breakdownMode, t])
 
   if (chartData.length === 0) {
     return (
@@ -85,17 +96,35 @@ export const TrendChart = ({ className, months = 6 }: Props) => {
     <Box className={className}>
       <VStack gap={4} align="stretch">
         <Heading size="lg">{t('trendChart.titleWithMonths', { months })}</Heading>
+        <HStack gap={2} justify="center">
+          <Button
+            size="sm"
+            variant={breakdownMode === 'name' ? 'solid' : 'outline'}
+            colorPalette="blue"
+            onClick={() => setBreakdownMode('name')}
+          >
+            {t('breakdownMode.byName')}
+          </Button>
+          <Button
+            size="sm"
+            variant={breakdownMode === 'category' ? 'solid' : 'outline'}
+            colorPalette="blue"
+            onClick={() => setBreakdownMode('category')}
+          >
+            {t('breakdownMode.byCategory')}
+          </Button>
+        </HStack>
         <div className="h-96 w-full">
           <ResponsiveBar
             data={chartData}
-            keys={topNames}
+            keys={topKeys}
             indexBy="month"
             margin={{ top: 50, right: 160, bottom: 50, left: 60 }}
             padding={0.3}
             valueScale={{ type: 'linear' }}
             indexScale={{ type: 'band', round: true }}
             colors={(d) => {
-              const index = topNames.indexOf(String(d.id))
+              const index = topKeys.indexOf(String(d.id))
               return colors[index % colors.length]
             }}
             axisTop={null}
@@ -131,6 +160,7 @@ export const TrendChart = ({ className, months = 6 }: Props) => {
                 itemDirection: 'left-to-right',
                 itemOpacity: 0.85,
                 symbolSize: 20,
+                format: (key) => keyLabels.get(String(key)) || String(key),
                 effects: [
                   {
                     on: 'hover',

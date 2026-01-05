@@ -39,7 +39,11 @@ export const filteredTransactionsAtom = atom((get): Transaction[] => {
 
 export const expensesAtom = atom((get): Transaction[] => {
   const transactions = get(filteredTransactionsAtom)
-  return transactions.filter((tx: Transaction) => tx.amount < 0)
+  return transactions.filter((tx: Transaction) => 
+    tx.amount < 0 && 
+    tx.type === 'expense' && 
+    !tx.linkedTransactionId
+  )
 })
 
 export const incomeAtom = atom((get): Transaction[] => {

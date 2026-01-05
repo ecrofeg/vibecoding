@@ -23,9 +23,22 @@ export const en = {
     name: 'Name',
     description: 'Description',
     amount: 'Amount',
+    category: 'Category',
     searchPlaceholder: 'Search by description or name...',
     today: 'Today',
     yesterday: 'Yesterday',
+  },
+  categories: {
+    food_home: 'Food at Home',
+    food_out: 'Food Out',
+    delivery: 'Delivery',
+    coffee_snacks: 'Coffee / Snacks',
+    transport: 'Transport',
+    taxi: 'Taxi',
+    shopping: 'Shopping',
+    subscriptions: 'Subscriptions & Services',
+    health: 'Health',
+    other: 'Other',
   },
   dateRangePicker: {
     thisWeek: 'This Week',
@@ -54,6 +67,10 @@ export const en = {
     message: 'Are you sure you want to delete all transactions? This action cannot be undone.',
     cancel: 'Cancel',
     confirm: 'Clear All',
+  },
+  breakdownMode: {
+    byName: 'By Name',
+    byCategory: 'By Category',
   },
 }
 

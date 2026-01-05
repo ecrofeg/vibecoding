@@ -23,9 +23,22 @@ export const ru = {
     name: 'Название',
     description: 'Описание',
     amount: 'Сумма',
+    category: 'Категория',
     searchPlaceholder: 'Поиск по описанию или названию...',
     today: 'Сегодня',
     yesterday: 'Вчера',
+  },
+  categories: {
+    food_home: 'Еда дома',
+    food_out: 'Еда вне дома',
+    delivery: 'Доставка',
+    coffee_snacks: 'Кофе / перекусы',
+    transport: 'Транспорт',
+    taxi: 'Такси',
+    shopping: 'Покупки',
+    subscriptions: 'Подписки и сервисы',
+    health: 'Здоровье',
+    other: 'Прочее',
   },
   dateRangePicker: {
     thisWeek: 'Эта неделя',
@@ -54,6 +67,10 @@ export const ru = {
     message: 'Вы уверены, что хотите удалить все транзакции? Это действие нельзя отменить.',
     cancel: 'Отмена',
     confirm: 'Очистить все',
+  },
+  breakdownMode: {
+    byName: 'По названию',
+    byCategory: 'По категориям',
   },
 }
 

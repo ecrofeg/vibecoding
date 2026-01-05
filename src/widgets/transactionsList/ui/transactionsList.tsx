@@ -111,6 +111,9 @@ export const TransactionsList = ({ className }: Props) => {
                       {t('transactionsList.amount')} {getSortIndicator('amount')}
                     </button>
                   </Table.ColumnHeader>
+                  <Table.ColumnHeader>
+                    {t('transactionsList.category')}
+                  </Table.ColumnHeader>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
@@ -123,6 +126,9 @@ export const TransactionsList = ({ className }: Props) => {
                   <Table.Cell>{tx.description}</Table.Cell>
                   <Table.Cell className={tx.amount < 0 ? 'text-red-600' : 'text-green-600'}>
                     {formatCurrency(tx.amount)}
+                  </Table.Cell>
+                  <Table.Cell>
+                    {t(`categories.${tx.category}`)}
                   </Table.Cell>
                 </Table.Row>
               ))}

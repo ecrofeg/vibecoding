@@ -1,6 +1,6 @@
 import { atomWithStorage } from 'jotai/utils'
 import { atom } from 'jotai'
-import type { Transaction } from '@/shared/types'
+import type { Transaction, TransactionType, TransactionCategory } from '@/shared/types'
 
 type StoredTransaction = {
   id: string
@@ -9,6 +9,23 @@ type StoredTransaction = {
   name: string
   description: string
   amount: number
+  type?: TransactionType
+  category?: TransactionCategory
+  linkedTransactionId?: string
+}
+
+const determineTransactionTypeFromDescription = (description: string, amount: number): TransactionType => {
+  const lowerDescription = description.toLowerCase()
+  
+  if (lowerDescription.includes('перевод') || lowerDescription.includes('пополнение')) {
+    return 'transfer'
+  }
+  
+  if (lowerDescription.includes('возврат') || lowerDescription.includes('refund')) {
+    return 'refund'
+  }
+  
+  return 'expense'
 }
 
 const storage = {
@@ -27,13 +44,17 @@ const storage = {
             continue
           }
           const documentId = tx.documentId || tx.id
+          const description = tx.description || ''
           record[documentId] = {
             id: tx.id,
             documentId,
             date,
-            name: tx.name || tx.description.trim(),
-            description: tx.description,
+            name: tx.name || description.trim(),
+            description,
             amount: tx.amount,
+            type: tx.type || determineTransactionTypeFromDescription(description, tx.amount),
+            category: tx.category || 'other',
+            linkedTransactionId: tx.linkedTransactionId,
           }
         }
         return record
@@ -46,13 +67,17 @@ const storage = {
           if (isNaN(date.getTime())) {
             continue
           }
+          const description = tx.description || ''
           record[documentId] = {
             id: tx.id,
             documentId: tx.documentId || documentId,
             date,
-            name: tx.name || tx.description.trim(),
-            description: tx.description,
+            name: tx.name || description.trim(),
+            description,
             amount: tx.amount,
+            type: tx.type || determineTransactionTypeFromDescription(description, tx.amount),
+            category: tx.category || 'other',
+            linkedTransactionId: tx.linkedTransactionId,
           }
         }
         return record
@@ -73,6 +98,9 @@ const storage = {
         name: tx.name,
         description: tx.description,
         amount: tx.amount,
+        type: tx.type,
+        category: tx.category,
+        linkedTransactionId: tx.linkedTransactionId,
       }
     }
     localStorage.setItem(key, JSON.stringify(stored))

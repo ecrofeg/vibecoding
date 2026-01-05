@@ -1,7 +1,7 @@
 import Papa from 'papaparse'
 import { parse, isValid } from 'date-fns'
 import { v4 as uuidv4 } from 'uuid'
-import type { Transaction } from '@/shared/types'
+import type { Transaction, TransactionType, TransactionCategory } from '@/shared/types'
 
 const hashString = (str: string): string => {
   let hash = 0
@@ -83,6 +83,55 @@ const findColumn = (headers: string[], possibleNames: string[]): number => {
   }
   
   return -1
+}
+
+const determineTransactionType = (description: string, amount: number): TransactionType => {
+  const lowerDescription = description.toLowerCase()
+  
+  if (lowerDescription.includes('перевод') || lowerDescription.includes('пополнение')) {
+    return 'transfer'
+  }
+  
+  if (lowerDescription.includes('возврат') || lowerDescription.includes('refund')) {
+    return 'refund'
+  }
+  
+  return 'expense'
+}
+
+const determineCategory = (description: string, amount: number): TransactionCategory => {
+  return 'other'
+}
+
+const linkRefundsToExpenses = (transactions: Transaction[]): Transaction[] => {
+  const expenses = transactions.filter(tx => tx.type === 'expense' && tx.amount < 0)
+  const refunds = transactions.filter(tx => tx.type === 'refund')
+  
+  for (const refund of refunds) {
+    const refundAmount = Math.abs(refund.amount)
+    const refundNameLower = refund.name.toLowerCase()
+    
+    const matchingExpense = expenses.find(expense => {
+      const expenseAmount = Math.abs(expense.amount)
+      const expenseNameLower = expense.name.toLowerCase()
+      
+      const amountsMatch = Math.abs(refundAmount - expenseAmount) < 0.01
+      const namesSimilar = expenseNameLower.includes(refundNameLower) || 
+                          refundNameLower.includes(expenseNameLower) ||
+                          expenseNameLower.split(' ').some(word => 
+                            word.length > 3 && refundNameLower.includes(word)
+                          )
+      
+      return amountsMatch && namesSimilar && !expense.linkedTransactionId
+    })
+    
+    if (matchingExpense) {
+      refund.linkedTransactionId = matchingExpense.id
+      matchingExpense.linkedTransactionId = refund.id
+    }
+  }
+  
+  return transactions
 }
 
 export const parseCSV = (csvContent: string): Transaction[] => {
@@ -265,6 +314,9 @@ export const parseCSV = (csvContent: string): Transaction[] => {
         documentId = generateSyntheticId(date, amount, description)
       }
 
+      const type = determineTransactionType(description, amount)
+      const category = determineCategory(description, amount)
+
       transactions.push({
         id: uuidv4(),
         documentId,
@@ -272,9 +324,11 @@ export const parseCSV = (csvContent: string): Transaction[] => {
         name,
         description,
         amount,
+        type,
+        category,
       })
       
-      console.log(`Row ${i + 1}: Added transaction - ${description}, amount: ${amount}`)
+      console.log(`Row ${i + 1}: Added transaction - ${description}, amount: ${amount}, type: ${type}`)
     } catch (error) {
       console.error(`Row ${i + 1}: Error processing row:`, error)
       continue
@@ -282,6 +336,9 @@ export const parseCSV = (csvContent: string): Transaction[] => {
   }
 
   console.log(`Total transactions parsed: ${transactions.length}`)
-  return transactions
+  
+  const linkedTransactions = linkRefundsToExpenses(transactions)
+  
+  return linkedTransactions
 }
 
