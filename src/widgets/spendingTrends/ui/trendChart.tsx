@@ -1,17 +1,12 @@
-import { useAtom } from 'jotai'
+import { useAtomValue } from 'jotai'
 import { useTranslation } from 'react-i18next'
 import { ResponsiveBar } from '@nivo/bar'
 import { transactionsAtom } from '@/entities/transaction'
+import { CATEGORIES } from '@/entities/category'
 import { formatDateShort } from '@/shared/lib/formatters'
 import { startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from 'date-fns'
 import { Box, VStack, Heading } from '@chakra-ui/react'
 import { useMemo } from 'react'
-
-const colors = [
-  '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-  '#FF9F40', '#7CB342', '#00BCD4', '#E91E63', '#673AB7',
-  '#3F51B5', '#009688', '#FFC107', '#795548', '#607D8B',
-]
 
 type Props = {
   className?: string
@@ -20,55 +15,57 @@ type Props = {
 
 export const TrendChart = ({ className, months = 6 }: Props) => {
   const { t, i18n } = useTranslation()
-  const [transactions] = useAtom(transactionsAtom)
+  const transactions = useAtomValue(transactionsAtom)
 
-  const { chartData, topNames } = useMemo(() => {
+  const { chartData, categoryKeys } = useMemo(() => {
     const endDate = endOfMonth(new Date())
     const startDate = startOfMonth(subMonths(endDate, months - 1))
     const monthRanges = eachMonthOfInterval({ start: startDate, end: endDate })
 
-    const allNameTotals = new Map<string, number>()
-    for (const tx of transactions) {
-      if (tx.amount < 0) {
-        const current = allNameTotals.get(tx.name) || 0
-        allNameTotals.set(tx.name, current + Math.abs(tx.amount))
-      }
+    const expenses = transactions.filter(tx => tx.txType === 'expense' && !tx.isTransfer)
+    
+    const allCategoryTotals = new Map<string, number>()
+    for (const tx of expenses) {
+      const categoryId = tx.categoryId || 'other'
+      const current = allCategoryTotals.get(categoryId) || 0
+      allCategoryTotals.set(categoryId, current + Math.abs(tx.amount))
     }
 
-    const sortedNames = Array.from(allNameTotals.entries())
+    const sortedCategories = Array.from(allCategoryTotals.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .map(([name]) => name)
+      .map(([catId]) => catId)
 
     const data = monthRanges.map(monthStart => {
       const monthEnd = endOfMonth(monthStart)
-      const monthTransactions = transactions.filter(tx => {
-        if (!tx.date || isNaN(tx.date.getTime())) {
+      const monthTransactions = expenses.filter(tx => {
+        const txDate = tx.date instanceof Date ? tx.date : new Date(tx.date)
+        if (!txDate || isNaN(txDate.getTime())) {
           return false
         }
-        return tx.date >= monthStart && tx.date <= monthEnd && tx.amount < 0
+        return txDate >= monthStart && txDate <= monthEnd
       })
 
-      const nameTotals = new Map<string, number>()
+      const categoryTotals = new Map<string, number>()
       
       for (const tx of monthTransactions) {
-        const current = nameTotals.get(tx.name) || 0
-        nameTotals.set(tx.name, current + Math.abs(tx.amount))
+        const categoryId = tx.categoryId || 'other'
+        const current = categoryTotals.get(categoryId) || 0
+        categoryTotals.set(categoryId, current + Math.abs(tx.amount))
       }
 
       const result: Record<string, string | number> = {
         month: formatDateShort(monthStart, i18n.language),
       }
 
-      for (const name of sortedNames) {
-        result[name] = Math.round((nameTotals.get(name) || 0) * 100) / 100
+      for (const catId of sortedCategories) {
+        result[catId] = Math.round((categoryTotals.get(catId) || 0) * 100) / 100
       }
 
       return result
     })
 
-    return { chartData: data, topNames: sortedNames }
-  }, [transactions, months])
+    return { chartData: data, categoryKeys: sortedCategories }
+  }, [transactions, months, i18n.language])
 
   if (chartData.length === 0) {
     return (
@@ -81,6 +78,16 @@ export const TrendChart = ({ className, months = 6 }: Props) => {
     )
   }
 
+  const getCategoryColor = (categoryId: string) => {
+    const category = CATEGORIES.find(c => c.id === categoryId)
+    return category?.color || '#607D8B'
+  }
+
+  const getCategoryLabel = (categoryId: string) => {
+    const category = CATEGORIES.find(c => c.id === categoryId)
+    return category ? (i18n.language === 'ru' ? category.name : category.nameEn) : 'Unknown'
+  }
+
   return (
     <Box className={className}>
       <VStack gap={4} align="stretch">
@@ -88,16 +95,13 @@ export const TrendChart = ({ className, months = 6 }: Props) => {
         <div className="h-96 w-full">
           <ResponsiveBar
             data={chartData}
-            keys={topNames}
+            keys={categoryKeys}
             indexBy="month"
             margin={{ top: 50, right: 160, bottom: 50, left: 60 }}
             padding={0.3}
             valueScale={{ type: 'linear' }}
             indexScale={{ type: 'band', round: true }}
-            colors={(d) => {
-              const index = topNames.indexOf(String(d.id))
-              return colors[index % colors.length]
-            }}
+            colors={(d) => getCategoryColor(String(d.id))}
             axisTop={null}
             axisRight={null}
             axisBottom={{
@@ -131,6 +135,11 @@ export const TrendChart = ({ className, months = 6 }: Props) => {
                 itemDirection: 'left-to-right',
                 itemOpacity: 0.85,
                 symbolSize: 20,
+                data: categoryKeys.map(catId => ({
+                  id: catId,
+                  label: getCategoryLabel(catId),
+                  color: getCategoryColor(catId),
+                })),
                 effects: [
                   {
                     on: 'hover',

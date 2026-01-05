@@ -1,8 +1,11 @@
 import { useRef, useState } from 'react'
-import { useAtom } from 'jotai'
+import { useSetAtom } from 'jotai'
 import { useTranslation } from 'react-i18next'
-import { transactionsAtom, parseCSV } from '@/entities/transaction'
-import { Button, Box, VStack } from '@chakra-ui/react'
+import { parseCSV, addTransactions } from '@/entities/transaction'
+import { applyRulesToTransactions } from '@/entities/rule'
+import { rulesAtom } from '@/entities/rule'
+import { useAtomValue } from 'jotai'
+import { Button, Box, VStack, Text } from '@chakra-ui/react'
 
 type Props = {
   className?: string
@@ -13,10 +16,11 @@ export const CsvUploader = ({ className }: Props) => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
-  const [transactions, setTransactions] = useAtom(transactionsAtom)
+  const addTx = useSetAtom(addTransactions)
+  const rules = useAtomValue(rulesAtom)
 
   const handleFile = async (file: File) => {
-    if (!file.name.endsWith('.csv')) {
+    if (!file.name.endsWith('.csv') && !file.name.endsWith('.pdf')) {
       alert(t('csvUploader.invalidFile'))
       return
     }
@@ -24,42 +28,37 @@ export const CsvUploader = ({ className }: Props) => {
     setIsProcessing(true)
 
     try {
-      const text = await file.text()
-      const parsedTransactions = parseCSV(text)
+      let parsedTransactions
       
-      const existingIds = new Set(transactions.map(tx => tx.documentId))
-      let newCount = 0
-      let updatedCount = 0
-      
-      for (const tx of parsedTransactions) {
-        if (existingIds.has(tx.documentId)) {
-          updatedCount++
-        } else {
-          newCount++
-        }
+      if (file.name.endsWith('.csv')) {
+        const text = await file.text()
+        parsedTransactions = parseCSV(text)
+      } else {
+        alert(t('csvUploader.pdfNotImplemented', 'PDF import coming soon!'))
+        setIsProcessing(false)
+        return
       }
+
+      const categorizedTransactions = applyRulesToTransactions(parsedTransactions, rules)
       
-      setTransactions((prev) => {
-        const record: Record<string, Transaction> = {}
-        for (const tx of prev) {
-          record[tx.documentId] = tx
-        }
-        for (const tx of parsedTransactions) {
-          record[tx.documentId] = tx
-        }
-        return Object.values(record)
-      })
+      const result = await addTx(categorizedTransactions)
       
-      const message = newCount > 0 && updatedCount > 0
-        ? t('csvUploader.importSuccess', { total: parsedTransactions.length, new: newCount, updated: updatedCount })
-        : newCount > 0
-        ? t('csvUploader.importSuccessNew', { count: newCount })
-        : t('csvUploader.importSuccessUpdated', { count: updatedCount })
+      const message = result.added > 0 && result.duplicates > 0
+        ? t('csvUploader.importSuccess', { 
+            total: parsedTransactions.length, 
+            new: result.added, 
+            updated: result.duplicates 
+          })
+        : result.added > 0
+        ? t('csvUploader.importSuccessNew', { count: result.added })
+        : t('csvUploader.importSuccessDuplicates', { count: result.duplicates })
       
       alert(message)
     } catch (error) {
       console.error('Error parsing CSV:', error)
-      alert(t('csvUploader.importError', { error: error instanceof Error ? error.message : 'Unknown error' }))
+      alert(t('csvUploader.importError', { 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      }))
     } finally {
       setIsProcessing(false)
       if (fileInputRef.current) {
@@ -109,7 +108,7 @@ export const CsvUploader = ({ className }: Props) => {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".csv"
+            accept=".csv,.pdf"
             onChange={handleFileSelect}
             className="hidden"
             id="csv-upload"
@@ -121,6 +120,9 @@ export const CsvUploader = ({ className }: Props) => {
           >
             {isProcessing ? t('csvUploader.processing') : t('csvUploader.selectFile')}
           </Button>
+          <Text fontSize="sm" color="gray.600">
+            {t('csvUploader.dragDrop', 'or drag and drop CSV/PDF file here')}
+          </Text>
         </Box>
       </VStack>
     </Box>

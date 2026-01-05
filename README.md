@@ -1,73 +1,170 @@
-# React + TypeScript + Vite
+# Personal Budget Tracker
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A comprehensive personal finance management application built with React, TypeScript, and Vite. Track expenses, manage budgets, and gain insights into your spending habits.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Core Features
+- **CSV Import**: Upload bank statements in CSV format
+- **PDF Import**: Import transactions from PDF bank statements (with DeepSeek AI)
+- **Smart Categorization**: Automatic transaction categorization with 9 fixed categories
+- **Budget Tracking**: Set and monitor budgets by category with forecasting
+- **Date Range Filtering**: Filter transactions by custom date ranges
+- **Transaction Management**: View, search, and edit transaction details
 
-## React Compiler
+### Advanced Features
+- **Rules Engine**: Create custom rules for automatic categorization
+- **AI Integration**: DeepSeek AI for merchant normalization and categorization
+- **Merchant Normalization**: Standardize merchant names automatically
+- **Transfer Detection**: Automatically detect and exclude internal transfers
+- **Insights & Analytics**:
+  - Leaks detection (small recurring expenses)
+  - Top merchants analysis
+  - Monthly spending trends
+  - Category-based expense breakdown
+- **Need/Want Classification**: Distinguish between essential and discretionary spending
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+- **Build Tool**: Vite + React 19 + TypeScript
+- **State Management**: Jotai with IndexedDB persistence
+- **Database**: IndexedDB (via Dexie.js)
+- **UI Framework**: Chakra UI v3 + Tailwind CSS
+- **Charts**: Nivo (pie, bar charts)
+- **Utilities**: 
+  - papaparse (CSV parsing)
+  - pdf-parse (PDF parsing)
+  - date-fns (date manipulation)
+  - uuid (ID generation)
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Data Models
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+```typescript
+type Transaction = {
+  id: string
+  sourceId: string
+  source: string
+  bankId: string
+  date: Date
+  amount: number
+  currency: string
+  merchantRaw: string
+  merchantNorm: string
+  categoryId: string | null
+  needType: 'need' | 'want' | 'mixed' | 'unknown'
+  txType: 'expense' | 'income' | 'transfer' | 'refund'
+  isTransfer: boolean
+  // ... more fields
+}
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+type Category = {
+  id: string
+  name: string
+  nameEn: string
+  color: string
+  defaultNeedType: NeedType
+}
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+type Rule = {
+  id: string
+  priority: number
+  matchType: 'exact' | 'contains' | 'regex'
+  pattern: string
+  categoryId: string
+  // ... more fields
+}
+
+type Budget = {
+  id: string
+  period: string // 'YYYY-MM'
+  categoryId: string
+  limitAmount: number
+  currency: string
+}
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Categories
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+The app uses 9 fixed categories:
+1. **Groceries** (Еда дома) - Need
+2. **Eating Out** (Еда вне дома) - Want
+3. **Delivery** (Доставка) - Want
+4. **Coffee/Snacks** (Кофе/перекусы) - Want
+5. **Transport** (Транспорт) - Mixed
+6. **Shopping** (Покупки) - Want
+7. **Subscriptions** (Подписки/сервисы) - Mixed
+8. **Health** (Здоровье) - Need
+9. **Other** (Прочее) - Unknown
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Getting Started
+
+### Installation
+
+```bash
+pnpm install
 ```
+
+### Development
+
+```bash
+pnpm dev
+```
+
+### Build
+
+```bash
+pnpm build
+```
+
+### Type Checking
+
+```bash
+pnpm tsc
+```
+
+## DeepSeek AI Integration
+
+To use AI-powered features:
+
+1. Get an API key from [DeepSeek](https://deepseek.com)
+2. Go to Settings in the app
+3. Enter your API key
+4. Enable AI features for:
+   - Merchant normalization
+   - Transaction categorization
+   - PDF import
+
+## File Structure
+
+```
+src/
+├── app/                    # App entry and providers
+├── entities/               # Business entities
+│   ├── transaction/        # Transaction logic
+│   ├── category/          # Categories
+│   ├── rule/              # Categorization rules
+│   └── budget/            # Budget management
+├── features/              # Feature modules
+│   └── deepseek/          # AI integration
+├── pages/                 # Page components
+│   ├── dashboard/         # Main dashboard
+│   └── settings/          # Settings page
+├── shared/                # Shared utilities
+│   ├── db/               # Database setup
+│   ├── lib/              # Utilities
+│   └── types/            # Type definitions
+└── widgets/               # UI widgets
+    ├── budgetTiles/       # Budget display
+    ├── csvUploader/       # File upload
+    ├── leaksWidget/       # Insights
+    ├── rulesManager/      # Rules management
+    └── transactionsList/  # Transaction table
+```
+
+## Migration from localStorage
+
+On first launch, the app automatically migrates existing data from localStorage to IndexedDB.
+
+## License
+
+MIT

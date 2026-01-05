@@ -1,114 +1,74 @@
-import { atomWithStorage } from 'jotai/utils'
 import { atom } from 'jotai'
+import { db } from '../../../shared/db/database'
 import type { Transaction } from '@/shared/types'
 
-type StoredTransaction = {
-  id: string
-  documentId: string
-  date: string
-  name: string
-  description: string
-  amount: number
-}
+export const transactionsAtom = atom<Transaction[]>([])
 
-const storage = {
-  getItem: (key: string): Record<string, Transaction> => {
-    try {
-      const item = localStorage.getItem(key)
-      if (!item) return {}
-      
-      const parsed = JSON.parse(item)
-      
-      if (Array.isArray(parsed)) {
-        const record: Record<string, Transaction> = {}
-        for (const tx of parsed as StoredTransaction[]) {
-          const date = new Date(tx.date)
-          if (isNaN(date.getTime())) {
-            continue
-          }
-          const documentId = tx.documentId || tx.id
-          record[documentId] = {
-            id: tx.id,
-            documentId,
-            date,
-            name: tx.name || tx.description.trim(),
-            description: tx.description,
-            amount: tx.amount,
-          }
-        }
-        return record
-      }
-      
-      if (typeof parsed === 'object' && parsed !== null) {
-        const record: Record<string, Transaction> = {}
-        for (const [documentId, tx] of Object.entries(parsed) as [string, StoredTransaction][]) {
-          const date = new Date(tx.date)
-          if (isNaN(date.getTime())) {
-            continue
-          }
-          record[documentId] = {
-            id: tx.id,
-            documentId: tx.documentId || documentId,
-            date,
-            name: tx.name || tx.description.trim(),
-            description: tx.description,
-            amount: tx.amount,
-          }
-        }
-        return record
-      }
-      
-      return {}
-    } catch {
-      return {}
-    }
-  },
-  setItem: (key: string, value: Record<string, Transaction>): void => {
-    const stored: Record<string, StoredTransaction> = {}
-    for (const [documentId, tx] of Object.entries(value)) {
-      stored[documentId] = {
-        id: tx.id,
-        documentId: tx.documentId,
-        date: tx.date.toISOString(),
-        name: tx.name,
-        description: tx.description,
-        amount: tx.amount,
-      }
-    }
-    localStorage.setItem(key, JSON.stringify(stored))
-  },
-  removeItem: (key: string): void => {
-    localStorage.removeItem(key)
-  },
-}
+export const loadTransactionsFromDB = atom(null, async (get, set) => {
+  const transactions = await db.transactions.toArray()
+  
+  const sorted = transactions.sort((a, b) => {
+    const dateA = new Date(a.date).getTime()
+    const dateB = new Date(b.date).getTime()
+    return dateB - dateA
+  })
+  
+  set(transactionsAtom, sorted)
+  return sorted
+})
 
-const transactionsRecordAtom = atomWithStorage<Record<string, Transaction>>(
-  'money-manager-transactions',
-  {},
-  storage
-)
+export const addTransactions = atom(null, async (get, set, newTransactions: Transaction[]) => {
+  const existingSourceIds = new Set(
+    (await db.transactions.toArray()).map(tx => tx.sourceId)
+  )
 
-export const transactionsAtom = atom(
-  (get) => {
-    const record = get(transactionsRecordAtom)
-    return Object.values(record)
-  },
-  (get, set, newValue: Transaction[] | ((prev: Transaction[]) => Transaction[])) => {
-    const currentRecord = get(transactionsRecordAtom)
-    const currentArray = Object.values(currentRecord)
-    
-    const newArray = typeof newValue === 'function' ? newValue(currentArray) : newValue
-    
-    const updatedRecord: Record<string, Transaction> = {}
-    for (const tx of newArray) {
-      updatedRecord[tx.documentId] = tx
-    }
-    
-    set(transactionsRecordAtom, updatedRecord)
+  const uniqueTransactions = newTransactions.filter(
+    tx => !existingSourceIds.has(tx.sourceId)
+  )
+
+  if (uniqueTransactions.length > 0) {
+    await db.transactions.bulkAdd(uniqueTransactions)
   }
-)
 
-export const clearTransactionsAtom = atom(null, (_get, set) => {
-  set(transactionsRecordAtom, {})
+  const allTransactions = await db.transactions.toArray()
+  const sorted = allTransactions.sort((a, b) => {
+    const dateA = new Date(a.date).getTime()
+    const dateB = new Date(b.date).getTime()
+    return dateB - dateA
+  })
+  
+  set(transactionsAtom, sorted)
+  
+  return {
+    added: uniqueTransactions.length,
+    duplicates: newTransactions.length - uniqueTransactions.length,
+  }
+})
+
+export const updateTransaction = atom(null, async (get, set, transaction: Transaction) => {
+  await db.transactions.put(transaction)
+  
+  const transactions = get(transactionsAtom)
+  const index = transactions.findIndex(tx => tx.id === transaction.id)
+  
+  if (index >= 0) {
+    const updated = [...transactions]
+    updated[index] = transaction
+    set(transactionsAtom, updated)
+  } else {
+    set(transactionsAtom, [...transactions, transaction])
+  }
+})
+
+export const deleteTransaction = atom(null, async (get, set, transactionId: string) => {
+  await db.transactions.delete(transactionId)
+  
+  const transactions = get(transactionsAtom)
+  set(transactionsAtom, transactions.filter(tx => tx.id !== transactionId))
+})
+
+export const clearTransactionsAtom = atom(null, async (_get, set) => {
+  await db.transactions.clear()
+  set(transactionsAtom, [])
 })
 

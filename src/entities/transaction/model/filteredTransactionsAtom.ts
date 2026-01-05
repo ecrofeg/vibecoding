@@ -11,11 +11,14 @@ export const filteredTransactionsAtom = atom((get): Transaction[] => {
   const searchQuery = get(searchFilterAtom).toLowerCase().trim()
   
   return transactions.filter((tx: Transaction) => {
-    if (!tx.date || isNaN(tx.date.getTime())) {
+    const txDate = tx.date instanceof Date ? tx.date : new Date(tx.date)
+    
+    if (!txDate || isNaN(txDate.getTime())) {
       return false
     }
+    
     try {
-      const isInDateRange = isWithinInterval(tx.date, {
+      const isInDateRange = isWithinInterval(txDate, {
         start: filter.startDate,
         end: filter.endDate,
       })
@@ -25,9 +28,10 @@ export const filteredTransactionsAtom = atom((get): Transaction[] => {
       }
       
       if (searchQuery) {
-        const matchesDescription = tx.description.toLowerCase().includes(searchQuery)
-        const matchesName = tx.name.toLowerCase().includes(searchQuery)
-        return matchesDescription || matchesName
+        const matchesDescription = tx.descriptionRaw.toLowerCase().includes(searchQuery)
+        const matchesMerchant = tx.merchantRaw.toLowerCase().includes(searchQuery) ||
+                                tx.merchantNorm.toLowerCase().includes(searchQuery)
+        return matchesDescription || matchesMerchant
       }
       
       return true
@@ -39,11 +43,11 @@ export const filteredTransactionsAtom = atom((get): Transaction[] => {
 
 export const expensesAtom = atom((get): Transaction[] => {
   const transactions = get(filteredTransactionsAtom)
-  return transactions.filter((tx: Transaction) => tx.amount < 0)
+  return transactions.filter((tx: Transaction) => tx.txType === 'expense' && !tx.isTransfer)
 })
 
 export const incomeAtom = atom((get): Transaction[] => {
   const transactions = get(filteredTransactionsAtom)
-  return transactions.filter((tx: Transaction) => tx.amount > 0)
+  return transactions.filter((tx: Transaction) => tx.txType === 'income')
 })
 

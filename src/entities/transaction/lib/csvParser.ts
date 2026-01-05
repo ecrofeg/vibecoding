@@ -2,6 +2,8 @@ import Papa from 'papaparse'
 import { parse, isValid } from 'date-fns'
 import { v4 as uuidv4 } from 'uuid'
 import type { Transaction } from '@/shared/types'
+import { normalizeMerchantName, extractCardLast4 } from './merchantNormalizer'
+import { getTxType } from './transferDetector'
 
 const hashString = (str: string): string => {
   let hash = 0
@@ -265,14 +267,39 @@ export const parseCSV = (csvContent: string): Transaction[] => {
         documentId = generateSyntheticId(date, amount, description)
       }
 
-      transactions.push({
+      const merchantRaw = name
+      const merchantNorm = normalizeMerchantName(merchantRaw)
+      const cardLast4 = extractCardLast4(description)
+
+      const transaction: Transaction = {
         id: uuidv4(),
-        documentId,
+        sourceId: documentId,
+        source: 'csv',
+        bankId: 'unknown',
+        accountId: null,
+        cardLast4,
         date,
-        name,
-        description,
+        postedDate: null,
         amount,
-      })
+        currency: 'RUB',
+        descriptionRaw: description,
+        merchantRaw,
+        merchantNorm,
+        categoryId: null,
+        needType: 'unknown',
+        txType: 'expense',
+        isTransfer: false,
+        isRecurring: false,
+        notes: null,
+        categorySource: null,
+        categoryConfidence: null,
+        normalizationConfidence: null,
+      }
+
+      transaction.txType = getTxType(transaction)
+      transaction.isTransfer = transaction.txType === 'transfer'
+
+      transactions.push(transaction)
       
       console.log(`Row ${i + 1}: Added transaction - ${description}, amount: ${amount}`)
     } catch (error) {
