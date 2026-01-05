@@ -1,0 +1,79 @@
+# Vibecoding Project Cheatsheet
+
+## Overview
+
+Personal Money Management App for tracking expenses via CSV bank statement imports.
+
+## Tech Stack
+
+- **Build:** Vite + React 18 + TypeScript
+- **State:** Jotai with localStorage persistence
+- **UI:** Chakra UI v3 + Tailwind CSS
+- **Charts:** Nivo (pie, bar)
+- **Utilities:** papaparse (CSV), date-fns (dates), uuid (IDs)
+
+## Features
+
+- CSV bank statement import with drag-and-drop
+- Expense categorization with keyword auto-matching
+- Date range filtering with quick presets
+- Expense breakdown pie chart by category
+- Monthly spending trend bar chart
+- Transaction list with category assignment
+
+## Data Models
+
+```typescript
+type Transaction = {
+  id: string
+  date: Date
+  description: string
+  amount: number          // negative = expense, positive = income
+  categoryId: string | null
+}
+
+type Category = {
+  id: string
+  name: string
+  color: string
+  keywords: string[]      // for auto-categorization
+}
+
+type DateFilter = {
+  startDate: Date
+  endDate: Date
+}
+```
+
+## File Structure
+
+```
+src/
+├── components/
+│   ├── csvUpload.tsx          # File upload with drag-and-drop
+│   ├── transactionList.tsx    # Filterable transaction table
+│   ├── expensePieChart.tsx    # Expense breakdown by category
+│   ├── trendChart.tsx         # Monthly spending bar chart
+│   ├── dateRangePicker.tsx    # Date period selector
+│   └── dashboard.tsx          # Main dashboard layout
+├── store/
+│   ├── transactionsAtom.ts    # Transactions with localStorage sync
+│   ├── filteredTransactionsAtom.ts
+│   └── dateFilterAtom.ts      # Current date range
+├── utils/
+│   ├── csvParser.ts           # Parse CSV to transactions
+│   └── formatters.ts          # Date/currency formatting
+├── types/
+│   └── index.ts               # TypeScript type definitions
+└── App.tsx                    # App shell
+```
+
+## Commands
+
+- `pnpm tsc` - TypeScript type checking
+- `pnpm unit` - Run Jest tests
+- `pnpm dev` - Start dev server
+
+
+
+
