@@ -61,7 +61,7 @@ const categorizeBatch = async (
           { role: 'user', content: transactionDescriptions.join('\n') },
         ],
         response_format: { type: 'json_object' },
-        temperature: 0.3,
+        temperature: 1.0,
       }),
     })
 
