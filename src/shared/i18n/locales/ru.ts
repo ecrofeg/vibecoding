@@ -1,5 +1,6 @@
 export const ru = {
   dashboard: {
+    cards: 'Карты',
     uploadTransactions: 'Загрузить транзакции',
     dateRange: 'Диапазон дат',
     totalIncome: 'Общий доход',
@@ -11,6 +12,8 @@ export const ru = {
     processing: 'Обработка...',
     selectFile: 'Загрузить выписку',
     invalidFile: 'Пожалуйста, загрузите CSV файл',
+    noCardSelected: 'Пожалуйста, сначала выберите карту',
+    importingTo: 'Импорт в',
     importSuccess: 'Успешно импортировано {{total}} транзакций: {{new}} новых, {{updated}} обновлено',
     importSuccessNew: 'Успешно импортировано {{count}} новых транзакций',
     importSuccessUpdated: 'Обновлено {{count}} существующих транзакций',
@@ -71,6 +74,25 @@ export const ru = {
   breakdownMode: {
     byName: 'По названию',
     byCategory: 'По категориям',
+  },
+  cards: {
+    allCards: 'Все карты',
+    addCard: 'Добавить карту',
+    editCard: 'Редактировать карту',
+    cardName: 'Название карты',
+    cardNamePlaceholder: 'напр., Основная карта',
+    cardType: 'Тип карты',
+    debit: 'Дебетовая',
+    credit: 'Кредитная',
+    cardColor: 'Цвет карты',
+    deleteCard: 'Удалить карту',
+    deleteCardTitle: 'Удалить карту',
+    deleteCardMessage: 'Вы уверены, что хотите удалить эту карту? Все транзакции по этой карте также будут удалены. Это действие нельзя отменить.',
+    deleteCardConfirm: 'Удалить',
+  },
+  common: {
+    cancel: 'Отмена',
+    save: 'Сохранить',
   },
 }
 

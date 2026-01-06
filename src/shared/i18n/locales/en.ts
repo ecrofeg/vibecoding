@@ -1,5 +1,6 @@
 export const en = {
   dashboard: {
+    cards: 'Cards',
     uploadTransactions: 'Upload Transactions',
     dateRange: 'Date Range',
     totalIncome: 'Total Income',
@@ -11,6 +12,8 @@ export const en = {
     processing: 'Processing...',
     selectFile: 'Upload Statement',
     invalidFile: 'Please upload a CSV file',
+    noCardSelected: 'Please select a card first',
+    importingTo: 'Importing to',
     importSuccess: 'Successfully imported {{total}} transactions: {{new}} new, {{updated}} updated',
     importSuccessNew: 'Successfully imported {{count}} new transactions',
     importSuccessUpdated: 'Updated {{count}} existing transactions',
@@ -71,6 +74,25 @@ export const en = {
   breakdownMode: {
     byName: 'By Name',
     byCategory: 'By Category',
+  },
+  cards: {
+    allCards: 'All Cards',
+    addCard: 'Add Card',
+    editCard: 'Edit Card',
+    cardName: 'Card Name',
+    cardNamePlaceholder: 'e.g., Main Card',
+    cardType: 'Card Type',
+    debit: 'Debit',
+    credit: 'Credit',
+    cardColor: 'Card Color',
+    deleteCard: 'Delete Card',
+    deleteCardTitle: 'Delete Card',
+    deleteCardMessage: 'Are you sure you want to delete this card? All transactions associated with this card will also be deleted. This action cannot be undone.',
+    deleteCardConfirm: 'Delete',
+  },
+  common: {
+    cancel: 'Cancel',
+    save: 'Save',
   },
 }
 

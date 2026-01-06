@@ -2,7 +2,8 @@ import { useRef, useState } from 'react'
 import { useAtom } from 'jotai'
 import { useTranslation } from 'react-i18next'
 import { transactionsAtom, parseCSV } from '@/entities/transaction'
-import { Button, Box, VStack } from '@chakra-ui/react'
+import { selectedCardAtom, cardsAtom } from '@/entities/card'
+import { Button, Box, VStack, Text } from '@chakra-ui/react'
 
 type Props = {
   className?: string
@@ -14,8 +15,15 @@ export const CsvUploader = ({ className }: Props) => {
   const [isDragging, setIsDragging] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [transactions, setTransactions] = useAtom(transactionsAtom)
+  const [selectedCard] = useAtom(selectedCardAtom)
+  const [cards] = useAtom(cardsAtom)
 
   const handleFile = async (file: File) => {
+    if (!selectedCard) {
+      alert(t('csvUploader.noCardSelected'))
+      return
+    }
+
     if (!file.name.endsWith('.csv')) {
       alert(t('csvUploader.invalidFile'))
       return
@@ -25,7 +33,7 @@ export const CsvUploader = ({ className }: Props) => {
 
     try {
       const text = await file.text()
-      const parsedTransactions = parseCSV(text)
+      const parsedTransactions = parseCSV(text, selectedCard)
       
       const existingIds = new Set(transactions.map(tx => tx.documentId))
       let newCount = 0
@@ -94,9 +102,16 @@ export const CsvUploader = ({ className }: Props) => {
     setIsDragging(false)
   }
 
+  const currentCard = cards.find((card) => card.id === selectedCard)
+
   return (
     <Box className={className}>
       <VStack gap={4}>
+        {currentCard && (
+          <Text fontSize="sm" color="gray.600">
+            {t('csvUploader.importingTo')}: <strong>{currentCard.name}</strong>
+          </Text>
+        )}
         <Box
           onDrop={handleDrop}
           onDragOver={handleDragOver}

@@ -21,11 +21,21 @@ export type Transaction = {
   amount: number
   type: TransactionType
   category: TransactionCategory
+  cardId: string
   linkedTransactionId?: string
 }
 
 export type DateFilter = {
   startDate: Date
   endDate: Date
+}
+
+export type CardType = 'debit' | 'credit'
+
+export type Card = {
+  id: string
+  name: string
+  type: CardType
+  color: string
 }
 

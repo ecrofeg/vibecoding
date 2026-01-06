@@ -3,18 +3,24 @@ import { isWithinInterval } from 'date-fns'
 import { transactionsAtom } from './transactionsAtom'
 import { dateFilterAtom } from './dateFilterAtom'
 import { searchFilterAtom } from './searchFilterAtom'
+import { selectedCardAtom } from '@/entities/card'
 import type { Transaction } from '@/shared/types'
 
 export const filteredTransactionsAtom = atom((get): Transaction[] => {
   const transactions = get(transactionsAtom)
   const filter = get(dateFilterAtom)
   const searchQuery = get(searchFilterAtom).toLowerCase().trim()
+  const selectedCard = get(selectedCardAtom)
   
   return transactions.filter((tx: Transaction) => {
     if (!tx.date || isNaN(tx.date.getTime())) {
       return false
     }
     try {
+      if (selectedCard !== null && tx.cardId !== selectedCard) {
+        return false
+      }
+      
       const isInDateRange = isWithinInterval(tx.date, {
         start: filter.startDate,
         end: filter.endDate,

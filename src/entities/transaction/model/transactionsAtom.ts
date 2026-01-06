@@ -11,6 +11,7 @@ type StoredTransaction = {
   amount: number
   type?: TransactionType
   category?: TransactionCategory
+  cardId?: string
   linkedTransactionId?: string
 }
 
@@ -54,6 +55,7 @@ const storage = {
             amount: tx.amount,
             type: tx.type || determineTransactionTypeFromDescription(description, tx.amount),
             category: tx.category || 'other',
+            cardId: tx.cardId || 'default-debit',
             linkedTransactionId: tx.linkedTransactionId,
           }
         }
@@ -77,6 +79,7 @@ const storage = {
             amount: tx.amount,
             type: tx.type || determineTransactionTypeFromDescription(description, tx.amount),
             category: tx.category || 'other',
+            cardId: tx.cardId || 'default-debit',
             linkedTransactionId: tx.linkedTransactionId,
           }
         }
@@ -100,6 +103,7 @@ const storage = {
         amount: tx.amount,
         type: tx.type,
         category: tx.category,
+        cardId: tx.cardId,
         linkedTransactionId: tx.linkedTransactionId,
       }
     }

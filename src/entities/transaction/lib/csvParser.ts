@@ -134,7 +134,7 @@ const linkRefundsToExpenses = (transactions: Transaction[]): Transaction[] => {
   return transactions
 }
 
-export const parseCSV = (csvContent: string): Transaction[] => {
+export const parseCSV = (csvContent: string, cardId: string): Transaction[] => {
   let cleanedContent = csvContent.trim()
   
   if (cleanedContent.charCodeAt(0) === 0xFEFF) {
@@ -326,6 +326,7 @@ export const parseCSV = (csvContent: string): Transaction[] => {
         amount,
         type,
         category,
+        cardId,
       })
       
       console.log(`Row ${i + 1}: Added transaction - ${description}, amount: ${amount}, type: ${type}`)
