@@ -10,6 +10,7 @@ export const en = {
   },
   csvUploader: {
     processing: 'Processing...',
+    categorizing: 'Categorizing transactions...',
     selectFile: 'Upload Statement',
     invalidFile: 'Please upload a CSV file',
     noCardSelected: 'Please select a card first',

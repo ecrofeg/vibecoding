@@ -85,7 +85,7 @@ const findColumn = (headers: string[], possibleNames: string[]): number => {
   return -1
 }
 
-const determineTransactionType = (description: string, amount: number): TransactionType => {
+const determineTransactionType = (description: string): TransactionType => {
   const lowerDescription = description.toLowerCase()
   
   if (lowerDescription.includes('перевод') || lowerDescription.includes('пополнение')) {
@@ -99,7 +99,7 @@ const determineTransactionType = (description: string, amount: number): Transact
   return 'expense'
 }
 
-const determineCategory = (description: string, amount: number): TransactionCategory => {
+const determineCategory = (): TransactionCategory => {
   return 'other'
 }
 
@@ -314,8 +314,8 @@ export const parseCSV = (csvContent: string, cardId: string): Transaction[] => {
         documentId = generateSyntheticId(date, amount, description)
       }
 
-      const type = determineTransactionType(description, amount)
-      const category = determineCategory(description, amount)
+      const type = determineTransactionType(description)
+      const category = determineCategory()
 
       transactions.push({
         id: uuidv4(),

@@ -3,7 +3,9 @@ import { useAtom } from 'jotai'
 import { useTranslation } from 'react-i18next'
 import { transactionsAtom, parseCSV } from '@/entities/transaction'
 import { selectedCardAtom, cardsAtom } from '@/entities/card'
+import { categorizeTransactions } from '@/features/categorization'
 import { Button, Box, VStack, Text } from '@chakra-ui/react'
+import type { Transaction } from '@/shared/types'
 
 type Props = {
   className?: string
@@ -14,6 +16,7 @@ export const CsvUploader = ({ className }: Props) => {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isCategorizing, setIsCategorizing] = useState(false)
   const [transactions, setTransactions] = useAtom(transactionsAtom)
   const [selectedCard] = useAtom(selectedCardAtom)
   const [cards] = useAtom(cardsAtom)
@@ -35,11 +38,16 @@ export const CsvUploader = ({ className }: Props) => {
       const text = await file.text()
       const parsedTransactions = parseCSV(text, selectedCard)
       
+      setIsProcessing(false)
+      setIsCategorizing(true)
+      
+      const categorizedTransactions = await categorizeTransactions(parsedTransactions)
+      
       const existingIds = new Set(transactions.map(tx => tx.documentId))
       let newCount = 0
       let updatedCount = 0
       
-      for (const tx of parsedTransactions) {
+      for (const tx of categorizedTransactions) {
         if (existingIds.has(tx.documentId)) {
           updatedCount++
         } else {
@@ -52,14 +60,14 @@ export const CsvUploader = ({ className }: Props) => {
         for (const tx of prev) {
           record[tx.documentId] = tx
         }
-        for (const tx of parsedTransactions) {
+        for (const tx of categorizedTransactions) {
           record[tx.documentId] = tx
         }
         return Object.values(record)
       })
       
       const message = newCount > 0 && updatedCount > 0
-        ? t('csvUploader.importSuccess', { total: parsedTransactions.length, new: newCount, updated: updatedCount })
+        ? t('csvUploader.importSuccess', { total: categorizedTransactions.length, new: newCount, updated: updatedCount })
         : newCount > 0
         ? t('csvUploader.importSuccessNew', { count: newCount })
         : t('csvUploader.importSuccessUpdated', { count: updatedCount })
@@ -70,6 +78,7 @@ export const CsvUploader = ({ className }: Props) => {
       alert(t('csvUploader.importError', { error: error instanceof Error ? error.message : 'Unknown error' }))
     } finally {
       setIsProcessing(false)
+      setIsCategorizing(false)
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
@@ -132,9 +141,13 @@ export const CsvUploader = ({ className }: Props) => {
           <Button
             colorPalette="blue"
             onClick={() => fileInputRef.current?.click()}
-            disabled={isProcessing}
+            disabled={isProcessing || isCategorizing}
           >
-            {isProcessing ? t('csvUploader.processing') : t('csvUploader.selectFile')}
+            {isProcessing 
+              ? t('csvUploader.processing') 
+              : isCategorizing 
+              ? t('csvUploader.categorizing')
+              : t('csvUploader.selectFile')}
           </Button>
         </Box>
       </VStack>
