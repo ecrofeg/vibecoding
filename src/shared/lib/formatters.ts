@@ -14,6 +14,32 @@ export const formatCurrency = (amount: number): string => {
   }).format(Math.abs(amount))
 }
 
+export const formatCurrencyPrecise = (amount: number): string => {
+  return new Intl.NumberFormat('ru-RU', {
+    style: 'currency',
+    currency: 'RUB',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount)
+}
+
+// Форматирование числа с сокращениями (к, кк)
+export const formatCompactNumber = (value: number): string => {
+  const absValue = Math.abs(value)
+  
+  if (absValue >= 1000000) {
+    // Миллионы -> кк
+    const millions = value / 1000000
+    return `${millions.toFixed(1).replace('.0', '')}кк`
+  } else if (absValue >= 1000) {
+    // Тысячи -> к
+    const thousands = value / 1000
+    return `${thousands.toFixed(0)}к`
+  }
+  
+  return value.toString()
+}
+
 export const formatDate = (
   date: Date | string,
   locale: string = 'ru',
