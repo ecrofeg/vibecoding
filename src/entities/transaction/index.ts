@@ -8,3 +8,11 @@ export {
 } from './model/filteredTransactionsAtom'
 export { parseCSV } from './lib/csvParser'
 
+export { transactionsApi } from './api/transactionsApi'
+export type { TransactionCreateRequest, TransactionUpdateRequest, TransactionsFilter } from './api/transactionsApi'
+export { useTransactions } from './hooks/useTransactions'
+export { useCreateTransaction } from './hooks/useCreateTransaction'
+export { useBulkImport } from './hooks/useBulkImport'
+export { useUpdateTransaction } from './hooks/useUpdateTransaction'
+export { useDeleteTransaction } from './hooks/useDeleteTransaction'
+

@@ -1,0 +1,25 @@
+export const endpoints = {
+  auth: {
+    login: '/api/auth/login',
+    logout: '/api/auth/logout',
+    me: '/api/auth/me',
+  },
+  cards: '/api/cards',
+  card: (id: string) => `/api/cards/${id}`,
+  transactions: '/api/transactions',
+  transaction: (id: string) => `/api/transactions/${id}`,
+  transactionsBulk: '/api/transactions/bulk',
+  settings: '/api/settings',
+  savingsAccounts: '/api/savings-accounts',
+  savingsAccount: (id: string) => `/api/savings-accounts/${id}`,
+  recurringExpenses: '/api/recurring-expenses',
+  recurringExpense: (id: string) => `/api/recurring-expenses/${id}`,
+  recurringIncome: '/api/recurring-income',
+  recurringIncomeItem: (id: string) => `/api/recurring-income/${id}`,
+  plannedExpenses: '/api/planned-expenses',
+  plannedExpense: (id: string) => `/api/planned-expenses/${id}`,
+  analytics: {
+    categoryBreakdown: '/api/analytics/category-breakdown',
+    monthlyTrend: '/api/analytics/monthly-trend',
+  },
+}

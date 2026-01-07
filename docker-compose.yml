@@ -1,0 +1,22 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "3000:3000"
+    environment:
+      - TURSO_DATABASE_URL=file:/app/data/local.db
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=changeme
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - FRONTEND_URL=http://localhost:5173
+    volumes:
+      - ./data:/app/data
+
+  frontend:
+    build: .
+    ports:
+      - "5173:80"
+    environment:
+      - VITE_API_URL=http://localhost:3000
+    depends_on:
+      - backend

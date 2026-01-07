@@ -1,4 +1,14 @@
 export const ru = {
+  auth: {
+    login: 'Вход',
+    username: 'Имя пользователя',
+    password: 'Пароль',
+    usernamePlaceholder: 'Введите имя пользователя',
+    passwordPlaceholder: 'Введите пароль',
+    signIn: 'Войти',
+    logout: 'Выйти',
+    invalidCredentials: 'Неверное имя пользователя или пароль',
+  },
   dashboard: {
     cards: 'Карты',
     uploadTransactions: 'Загрузить транзакции',

@@ -1,4 +1,14 @@
 export const en = {
+  auth: {
+    login: 'Login',
+    username: 'Username',
+    password: 'Password',
+    usernamePlaceholder: 'Enter username',
+    passwordPlaceholder: 'Enter password',
+    signIn: 'Sign In',
+    logout: 'Logout',
+    invalidCredentials: 'Invalid username or password',
+  },
   dashboard: {
     cards: 'Cards',
     uploadTransactions: 'Upload Transactions',
