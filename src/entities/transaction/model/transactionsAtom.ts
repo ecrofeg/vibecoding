@@ -15,7 +15,7 @@ type StoredTransaction = {
   linkedTransactionId?: string
 }
 
-const determineTransactionTypeFromDescription = (description: string, amount: number): TransactionType => {
+const determineTransactionTypeFromDescription = (description: string): TransactionType => {
   const lowerDescription = description.toLowerCase()
   
   if (lowerDescription.includes('перевод') || lowerDescription.includes('пополнение')) {
@@ -53,7 +53,7 @@ const storage = {
             name: tx.name || description.trim(),
             description,
             amount: tx.amount,
-            type: tx.type || determineTransactionTypeFromDescription(description, tx.amount),
+            type: tx.type || determineTransactionTypeFromDescription(description),
             category: tx.category || 'other',
             cardId: tx.cardId || 'default-debit',
             linkedTransactionId: tx.linkedTransactionId,
@@ -77,7 +77,7 @@ const storage = {
             name: tx.name || description.trim(),
             description,
             amount: tx.amount,
-            type: tx.type || determineTransactionTypeFromDescription(description, tx.amount),
+            type: tx.type || determineTransactionTypeFromDescription(description),
             category: tx.category || 'other',
             cardId: tx.cardId || 'default-debit',
             linkedTransactionId: tx.linkedTransactionId,

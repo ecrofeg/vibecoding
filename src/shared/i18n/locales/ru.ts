@@ -10,6 +10,7 @@ export const ru = {
   },
   csvUploader: {
     processing: 'Обработка...',
+    categorizing: 'Категоризация транзакций...',
     selectFile: 'Загрузить выписку',
     invalidFile: 'Пожалуйста, загрузите CSV файл',
     noCardSelected: 'Пожалуйста, сначала выберите карту',
