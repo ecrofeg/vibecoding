@@ -1,4 +1,16 @@
 import type { Transaction, TransactionCategory } from '@/shared/types'
+
+export const categorizeTransactions = async (
+  transactions: Transaction[]
+): Promise<Transaction[]> => {
+  console.log('DeepSeek categorization temporarily disabled')
+  return transactions.map((tx) => ({ ...tx, category: 'other' as TransactionCategory }))
+}
+
+/*
+// Temporarily disabled DeepSeek API categorization
+// To re-enable: uncomment this code and replace the simple implementation above
+
 import { getDeepseekApiKey } from './apiKey'
 
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions'
@@ -140,3 +152,4 @@ export const categorizeTransactions = async (
     return transactions.map((tx) => ({ ...tx, category: 'other' as TransactionCategory }))
   }
 }
+*/
