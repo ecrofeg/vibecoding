@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
+import { cookieOptions } from '../plugins/auth.js'
 
 const loginSchema = z.object({
   username: z.string().min(1),
@@ -24,13 +25,7 @@ export async function authRoutes(app: FastifyInstance) {
 
     const token = app.jwt.sign({ username })
 
-    reply.setCookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-    })
+    reply.setCookie('token', token, cookieOptions)
 
     return { success: true, username }
   })

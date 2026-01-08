@@ -9,6 +9,16 @@ declare module '@fastify/jwt' {
   }
 }
 
+const COOKIE_MAX_AGE = 60 * 60 // 1 hour
+
+export const cookieOptions = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict' as const,
+  path: '/',
+  maxAge: COOKIE_MAX_AGE,
+}
+
 export async function registerAuth(app: FastifyInstance) {
   await app.register(cookie)
 
@@ -23,6 +33,9 @@ export async function registerAuth(app: FastifyInstance) {
   app.decorate('authenticate', async function (request: FastifyRequest, reply: FastifyReply) {
     try {
       await request.jwtVerify()
+
+      const newToken = app.jwt.sign({ username: request.user.username })
+      reply.setCookie('token', newToken, cookieOptions)
     } catch {
       reply.status(401).send({ error: 'Unauthorized' })
     }
