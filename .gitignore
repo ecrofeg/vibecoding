@@ -23,3 +23,22 @@ dist-ssr
 *.sln
 *.sw?
 example.csv
+
+# Backend
+backend/node_modules
+backend/dist
+backend/*.db
+backend/*.db-*
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Data directory for docker
+data/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+backend/.env

@@ -1,0 +1,16 @@
+services:
+  backend:
+    image: ${REGISTRY:-ghcr.io}/vibecoding-backend:${TAG:-latest}
+    ports:
+      - "3000:3000"
+    environment:
+      - TURSO_DATABASE_URL=${TURSO_DATABASE_URL}
+      - TURSO_AUTH_TOKEN=${TURSO_AUTH_TOKEN}
+      - ADMIN_USERNAME=${ADMIN_USERNAME}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure

@@ -1,2 +1,0 @@
-export { ChakraProvider } from './chakraProvider'
-
