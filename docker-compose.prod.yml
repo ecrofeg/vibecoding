@@ -14,16 +14,3 @@ services:
       replicas: 1
       restart_policy:
         condition: on-failure
-
-  frontend:
-    image: ${REGISTRY:-ghcr.io}/vibecoding-frontend:${TAG:-latest}
-    ports:
-      - "80:80"
-    environment:
-      - VITE_API_URL=${API_URL}
-    depends_on:
-      - backend
-    deploy:
-      replicas: 1
-      restart_policy:
-        condition: on-failure
