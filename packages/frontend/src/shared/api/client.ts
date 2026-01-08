@@ -60,4 +60,15 @@ export const api = {
     }),
 
   delete: <T>(endpoint: string) => apiClient<T>(endpoint, { method: 'DELETE' }),
+
+  upload: <T>(endpoint: string, file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    return apiClient<T>(endpoint, {
+      method: 'POST',
+      body: formData,
+      headers: {},
+    })
+  },
 }

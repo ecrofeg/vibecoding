@@ -24,6 +24,14 @@ export type TransactionsFilter = {
 
 export type ApiTransaction = Omit<Transaction, 'date'> & { date: string }
 
+export type CsvUploadResponse = {
+  success: boolean
+  total: number
+  new: number
+  updated: number
+  transactions: ApiTransaction[]
+}
+
 export const transactionsApi = {
   getAll: (filter?: TransactionsFilter) => {
     const params = new URLSearchParams()
@@ -43,6 +51,9 @@ export const transactionsApi = {
 
   bulkCreate: (data: TransactionCreateRequest[]) =>
     api.post<{ success: boolean; count: number }>(endpoints.transactionsBulk, data),
+
+  uploadCsv: (cardId: string, file: File) =>
+    api.upload<CsvUploadResponse>(endpoints.transactionsUploadCsv(cardId), file),
 
   update: (id: string, data: TransactionUpdateRequest) =>
     api.put<ApiTransaction>(endpoints.transaction(id), data),

@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import Fastify from 'fastify'
+import multipart from '@fastify/multipart'
 import { registerCors } from './plugins/cors.js'
 import { registerAuth } from './plugins/auth.js'
 import { authRoutes } from './routes/auth.js'
@@ -19,6 +20,7 @@ const app = Fastify({
 async function main() {
   await registerCors(app)
   await registerAuth(app)
+  await app.register(multipart, { limits: { fileSize: 10 * 1024 * 1024 } })
 
   await app.register(authRoutes)
   await app.register(cardsRoutes)

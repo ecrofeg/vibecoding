@@ -1,11 +1,10 @@
 import { useRef, useState } from 'react'
-import { useAtom } from 'jotai'
+import { useAtomValue } from 'jotai'
 import { useTranslation } from 'react-i18next'
-import { transactionsAtom, parseCSV } from '@/entities/transaction'
-import { selectedCardAtom, cardsAtom } from '@/entities/card'
-import { categorizeTransactions } from '@/features/categorization'
+import { useUploadCsv } from '@/entities/transaction'
+import { selectedCardAtom } from '@/entities/card'
+import { useCards } from '@/entities/card'
 import { Button, Box, VStack, Text } from '@chakra-ui/react'
-import type { Transaction } from '@/shared/types'
 
 type Props = {
   className?: string
@@ -15,11 +14,9 @@ export const CsvUploader = ({ className }: Props) => {
   const { t } = useTranslation()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [isCategorizing, setIsCategorizing] = useState(false)
-  const [transactions, setTransactions] = useAtom(transactionsAtom)
-  const [selectedCard] = useAtom(selectedCardAtom)
-  const [cards] = useAtom(cardsAtom)
+  const selectedCard = useAtomValue(selectedCardAtom)
+  const { data: cards = [] } = useCards()
+  const uploadCsvMutation = useUploadCsv()
 
   const handleFile = async (file: File) => {
     if (!selectedCard) {
@@ -32,53 +29,20 @@ export const CsvUploader = ({ className }: Props) => {
       return
     }
 
-    setIsProcessing(true)
-
     try {
-      const text = await file.text()
-      const parsedTransactions = parseCSV(text, selectedCard)
-      
-      setIsProcessing(false)
-      setIsCategorizing(true)
-      
-      const categorizedTransactions = await categorizeTransactions(parsedTransactions)
-      
-      const existingIds = new Set(transactions.map(tx => tx.documentId))
-      let newCount = 0
-      let updatedCount = 0
-      
-      for (const tx of categorizedTransactions) {
-        if (existingIds.has(tx.documentId)) {
-          updatedCount++
-        } else {
-          newCount++
-        }
-      }
-      
-      setTransactions((prev) => {
-        const record: Record<string, Transaction> = {}
-        for (const tx of prev) {
-          record[tx.documentId] = tx
-        }
-        for (const tx of categorizedTransactions) {
-          record[tx.documentId] = tx
-        }
-        return Object.values(record)
-      })
-      
-      const message = newCount > 0 && updatedCount > 0
-        ? t('csvUploader.importSuccess', { total: categorizedTransactions.length, new: newCount, updated: updatedCount })
-        : newCount > 0
-        ? t('csvUploader.importSuccessNew', { count: newCount })
-        : t('csvUploader.importSuccessUpdated', { count: updatedCount })
-      
+      const result = await uploadCsvMutation.mutateAsync({ cardId: selectedCard, file })
+
+      const message = result.new > 0 && result.updated > 0
+        ? t('csvUploader.importSuccess', { total: result.total, new: result.new, updated: result.updated })
+        : result.new > 0
+        ? t('csvUploader.importSuccessNew', { count: result.new })
+        : t('csvUploader.importSuccessUpdated', { count: result.updated })
+
       alert(message)
     } catch (error) {
-      console.error('Error parsing CSV:', error)
+      console.error('Error uploading CSV:', error)
       alert(t('csvUploader.importError', { error: error instanceof Error ? error.message : 'Unknown error' }))
     } finally {
-      setIsProcessing(false)
-      setIsCategorizing(false)
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
@@ -141,12 +105,10 @@ export const CsvUploader = ({ className }: Props) => {
           <Button
             colorPalette="blue"
             onClick={() => fileInputRef.current?.click()}
-            disabled={isProcessing || isCategorizing}
+            disabled={uploadCsvMutation.isPending}
           >
-            {isProcessing 
-              ? t('csvUploader.processing') 
-              : isCategorizing 
-              ? t('csvUploader.categorizing')
+            {uploadCsvMutation.isPending
+              ? t('csvUploader.processing')
               : t('csvUploader.selectFile')}
           </Button>
         </Box>
@@ -154,4 +116,3 @@ export const CsvUploader = ({ className }: Props) => {
     </Box>
   )
 }
-

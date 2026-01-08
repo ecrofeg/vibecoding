@@ -9,10 +9,11 @@ export {
 export { parseCSV } from './lib/csvParser'
 
 export { transactionsApi } from './api/transactionsApi'
-export type { TransactionCreateRequest, TransactionUpdateRequest, TransactionsFilter } from './api/transactionsApi'
+export type { TransactionCreateRequest, TransactionUpdateRequest, TransactionsFilter, CsvUploadResponse } from './api/transactionsApi'
 export { useTransactions } from './hooks/useTransactions'
 export { useCreateTransaction } from './hooks/useCreateTransaction'
 export { useBulkImport } from './hooks/useBulkImport'
+export { useUploadCsv } from './hooks/useUploadCsv'
 export { useUpdateTransaction } from './hooks/useUpdateTransaction'
 export { useDeleteTransaction } from './hooks/useDeleteTransaction'
 

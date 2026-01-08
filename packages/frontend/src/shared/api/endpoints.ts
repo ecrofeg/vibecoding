@@ -9,6 +9,7 @@ export const endpoints = {
   transactions: '/api/transactions',
   transaction: (id: string) => `/api/transactions/${id}`,
   transactionsBulk: '/api/transactions/bulk',
+  transactionsUploadCsv: (cardId: string) => `/api/transactions/upload-csv?cardId=${cardId}`,
   settings: '/api/settings',
   savingsAccounts: '/api/savings-accounts',
   savingsAccount: (id: string) => `/api/savings-accounts/${id}`,
