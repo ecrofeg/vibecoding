@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import Fastify from 'fastify'
 import { registerCors } from './plugins/cors.js'
 import { registerAuth } from './plugins/auth.js'
